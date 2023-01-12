@@ -10,10 +10,14 @@ local newScriptButton = toolbar:CreateButton("Track Placer", "Track Placer", "rb
 -- Make button clickable even if 3D viewport is hidden
 newScriptButton.ClickableWhenViewportHidden = true
 
+local UserInputService = game:GetService('UserInputService')
 local enabled = false
-local mouse = Plugin:GetMouse()
+local mouse = plugin:GetMouse()
+local trackName = "forwardTrack"
+local lastTrackPositon = Vector3(0,0,0)
+local lastTrack = nil
 
-function placeTrack()
+function placeTrack(position: CFrame)
 	-- places the track
 end
 
@@ -23,27 +27,34 @@ function cloneTrack(trackName)
 
 	for i,v in pairs(workspace:GetChildren()) do -- change to GetDescendants if the track is placed inside of a folder or Model
 		if v.Name == trackName then
-			track = v 
+			track = v
 		end
 	end
 
 	if track == nil then print("Track placing plugin - Could not find the track with the name: " + trackName) else return track end
 end
 
-function showHologram()
+function showHologram(position: CFrame)
 	-- displays the track before placing it
+	local track = cloneTrack(trackName)
+	lastTrack = track
+
+	-- place track at position
 end
 
 function bendTrackLeft()
 	-- bends the track more to the left
+
 end
 
 function bendTrackRight()
 	-- bends the track more to the right
+
 end
 
 function bendTrackForward()
 	-- makes the track go forward
+
 end
 
 function onInputBegan(input, something)
@@ -52,7 +63,7 @@ function onInputBegan(input, something)
 		if input.KeyCode == Enum.KeyCode.C then
 			-- change track to right
 			bendTrackRight()
-		elseif input.KeyCode = Enum.KeyCode.X then
+		elseif input.KeyCode == Enum.KeyCode.X then
 			-- change track to forward
 			bendTrackForward()
 		elseif input.KeyCode == Enum.KeyCode.Z then
@@ -61,10 +72,11 @@ function onInputBegan(input, something)
 		end
 	elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
 		-- place track when click
+		placeTrack(mouse.Hit)
 	end
 end
 
-function getClosestConnector(connectorName)
+function getClosestConnector(connectorName: string)
 	local closestDistance = math.huge
 	local closestConnector = nil
 
@@ -81,7 +93,22 @@ function getClosestConnector(connectorName)
 	end
 end
 
-local function onGUIClick()
+game:GetService('RunService').RenderStepped:Connect(function(deltaTime)
+	if enabled then
+		-- create holograms while wait for input
+		local connector = getClosestConnector("connector")
+
+		-- get position to place hologram
+		local position = CFrame.new(0,0,0)
+
+		-- display hologram
+		showHologram(position)
+
+		-- refresh every render step
+	end
+end)
+
+local function onClick()
 	if not enabled then
 		enabled = true
 		print("Track placing plugin - started")
@@ -91,5 +118,5 @@ local function onGUIClick()
 	end
 end
 
-newScriptButton.Click:Connect(onGUIClick)
+newScriptButton.Click:Connect(onClick)
 UserInputService.InputBegan:Connect(onInputBegan)
