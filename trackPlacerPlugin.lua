@@ -14,11 +14,15 @@ local UserInputService = game:GetService('UserInputService')
 local enabled = false
 local mouse = plugin:GetMouse()
 local trackName = "forwardTrack"
-local lastTrackPositon = Vector3(0,0,0)
 local lastTrack = nil
 
-function placeTrack(position: CFrame)
+function placeTrack()
 	-- places the track
+	local placingTrack = cloneTrack(trackName)
+	placingTrack:PivotTo(lastTrack:GetPivot())
+
+	-- remove hologram
+	lastTrack = nil
 end
 
 function cloneTrack(trackName)
@@ -34,45 +38,46 @@ function cloneTrack(trackName)
 	if track == nil then print("Track placing plugin - Could not find the track with the name: " + trackName) else return track end
 end
 
+function refreshHologram(track: Model)
+	-- change position of cloned track
+	track:PivotTo(mouse.Hit)
+end
+
 function showHologram(position: CFrame)
 	-- displays the track before placing it
 	local track = cloneTrack(trackName)
-	lastTrack = track
 
-	-- place track at position
+	-- return cloned track
+	return track
 end
 
 function bendTrackLeft()
 	-- bends the track more to the left
-
+	if lastTrack then
+		lastTrack:PivotTo(lastTrack:GetPivot() * CFrame.Angles(0, math.deg(45), 0))
+	end
 end
 
 function bendTrackRight()
 	-- bends the track more to the right
-
-end
-
-function bendTrackForward()
-	-- makes the track go forward
-
+	if lastTrack then
+		lastTrack:PivotTo(lastTrack:GetPivot() * CFrame.Angles(0, math.deg(-45), 0))
+	end
 end
 
 function onInputBegan(input, something)
 	-- check for keybinds to change track shape and mouse click to place tracks
 	if input.UserInputType == Enum.UserInputType.Keyboard then
-		if input.KeyCode == Enum.KeyCode.C then
+		if input.KeyCode == Enum.KeyCode.X then
 			-- change track to right
 			bendTrackRight()
-		elseif input.KeyCode == Enum.KeyCode.X then
-			-- change track to forward
-			bendTrackForward()
 		elseif input.KeyCode == Enum.KeyCode.Z then
 			-- change track to left
 			bendTrackLeft()
 		end
 	elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
 		-- place track when click
-		placeTrack(mouse.Hit)
+		placeTrack()
 	end
 end
 
@@ -87,7 +92,7 @@ function getClosestConnector(connectorName: string)
 			-- rewrite the variables until you have the closest connector
 			if currentDistance < closestDistance then 
 				closestDistance = currentDistance
-				closestConnector = v
+				closestDistance = v
 			end
 		end
 	end
@@ -102,9 +107,12 @@ game:GetService('RunService').RenderStepped:Connect(function(deltaTime)
 		local position = CFrame.new(0,0,0)
 
 		-- display hologram
-		showHologram(position)
-
-		-- refresh every render step
+		if lastTrack == nil then
+			lastTrack = showHologram(position)
+		else
+			-- refresh every render ste
+			refreshHologram(lastTrack)
+		end
 	end
 end)
 
