@@ -13,7 +13,7 @@ newScriptButton.ClickableWhenViewportHidden = true
 local UserInputService = game:GetService('UserInputService')
 local enabled = false
 local mouse = plugin:GetMouse()
-local trackName = "forwardTrack"
+local trackName = "forwardTrack" -- the name of the main track design that will be used for cloning
 local trackFolder = "Rails" -- The folder for keeping the tracks
 local lastTrack = nil
 local currentTrack = nil
@@ -63,14 +63,14 @@ end
 function bendTrackLeft()
 	-- bends the track more to the left
 	if currentTrack ~= nil then
-		lastTrack:PivotTo(lastTrack:GetPivot() * CFrame.Angles(0, math.deg(45), 0))
+		currentTrack:PivotTo(currentTrack:GetPivot() * CFrame.Angles(0, math.deg(45), 0))
 	end
 end
 
 function bendTrackRight()
 	-- bends the track more to the right
 	if currentTrack ~= nil then
-		lastTrack:PivotTo(lastTrack:GetPivot() * CFrame.Angles(0, math.deg(-45), 0))
+		currentTrack:PivotTo(currentTrack:GetPivot() * CFrame.Angles(0, math.deg(-45), 0))
 	end
 end
 
