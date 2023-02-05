@@ -2,7 +2,7 @@ local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local Selection = game:GetService("Selection")
 
 -- Create a new toolbar section titled "Custom Script Tools"
-local toolbar = plugin:CreateToolbar("Peter's plugins")
+local toolbar = plugin:CreateToolbar("TheOfficialPeter's Plugs")
 
 -- Add a toolbar button named "trackPlacer"
 local newScriptButton = toolbar:CreateButton("Track Placer", "Track Placer", "rbxassetid://4458901886")
@@ -14,53 +14,62 @@ local UserInputService = game:GetService('UserInputService')
 local enabled = false
 local mouse = plugin:GetMouse()
 local trackName = "forwardTrack"
+local trackFolder = "Rails" -- The folder for keeping the tracks
 local lastTrack = nil
-
-function placeTrack()
-	-- places the track
-	local placingTrack = cloneTrack(trackName)
-	placingTrack:PivotTo(lastTrack:GetPivot())
-
-	-- remove hologram
-	lastTrack = nil
-end
+local currentTrack = nil
 
 function cloneTrack(trackName)
 	-- clones the track for placement
 	local track = nil
 
-	for i,v in pairs(workspace:GetChildren()) do -- change to GetDescendants if the track is placed inside of a folder or Model
+	for i,v in pairs(workspace[trackFolder]:GetChildren()) do -- change to GetDescendants if the track is placed inside of a folder or Model
 		if v.Name == trackName then
 			track = v
 		end
 	end
 
-	if track == nil then print("Track placing plugin - Could not find the track with the name: " + trackName) else return track end
+	if track == nil then 
+		print("Track placing plugin - Could not find the track with the name: " .. trackName)
+	else
+		local clonedTrack = track:Clone()
+		clonedTrack.Parent = workspace[trackFolder]
+
+		return clonedTrack
+	end
 end
 
-function refreshHologram(track: Model)
+function placeTrack()
+	-- places the track
+	if currentTrack ~= nil then
+		currentTrack:PivotTo(CFrame.new(mouse.Hit.Position) + Vector3.new(0, .5, 0))
+		currentTrack = nil
+	end
+end
+
+function refreshHologram()
 	-- change position of cloned track
-	track:PivotTo(mouse.Hit)
+	if currentTrack ~= nil then
+		currentTrack:PivotTo(CFrame.new(mouse.Hit.Position) + Vector3.new(0, .5, 0))
+	end
 end
 
-function showHologram(position: CFrame)
+function showHologram()
 	-- displays the track before placing it
-	local track = cloneTrack(trackName)
-
-	-- return cloned track
-	return track
+	if currentTrack == nil then
+		currentTrack = cloneTrack(trackName)
+	end
 end
 
 function bendTrackLeft()
 	-- bends the track more to the left
-	if lastTrack then
+	if currentTrack ~= nil then
 		lastTrack:PivotTo(lastTrack:GetPivot() * CFrame.Angles(0, math.deg(45), 0))
 	end
 end
 
 function bendTrackRight()
 	-- bends the track more to the right
-	if lastTrack then
+	if currentTrack ~= nil then
 		lastTrack:PivotTo(lastTrack:GetPivot() * CFrame.Angles(0, math.deg(-45), 0))
 	end
 end
@@ -103,16 +112,11 @@ game:GetService('RunService').RenderStepped:Connect(function(deltaTime)
 		-- create holograms while wait for input
 		local connector = getClosestConnector("connector")
 
-		-- get position to place hologram
-		local position = CFrame.new(0,0,0)
-
 		-- display hologram
-		if lastTrack == nil then
-			lastTrack = showHologram(position)
-		else
-			-- refresh every render ste
-			refreshHologram(lastTrack)
-		end
+		showHologram()
+
+		-- refresh every render ste
+		refreshHologram()
 	end
 end)
 
@@ -123,6 +127,9 @@ local function onClick()
 	else
 		enabled = false
 		print("Track placing plugin - stopped")
+
+		-- Remove the track that is currently being used
+		currentTrack:Destroy()
 	end
 end
 
